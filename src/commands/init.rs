@@ -1,22 +1,15 @@
-use std::fs;
+use std::{fs, io::Result};
 
-use super::ExecutableCommand;
+use clap::Args;
 
-pub struct InitCommand {}
+#[derive(Args, Debug)]
+pub struct InitFileArgs {}
 
-impl InitCommand {
-    pub fn new(args: Vec<String>) -> Self {
-        return Self { }
-    }
-}
-
-impl ExecutableCommand for InitCommand {
-    fn execute(&self) -> std::io::Result<()> {
-        fs::create_dir(".git").unwrap();
-        fs::create_dir(".git/objects").unwrap();
-        fs::create_dir(".git/refs").unwrap();
-        fs::write(".git/HEAD", "ref: refs/heads/main\n").unwrap();
-        println!("Initialized git directory");
-        Ok(())
-    }
+pub fn init(_args: &InitFileArgs) -> Result<()> {
+    fs::create_dir(".git").unwrap();
+    fs::create_dir(".git/objects").unwrap();
+    fs::create_dir(".git/refs").unwrap();
+    fs::write(".git/HEAD", "ref: refs/heads/main\n").unwrap();
+    println!("Initialized git directory");
+    Ok(())
 }

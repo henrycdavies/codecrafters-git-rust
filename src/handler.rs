@@ -1,14 +1,12 @@
-use crate::{commands::{Command, CommandExecutionError, ExecutableCommand}, input::ParsedInput};
+use crate::commands::{Commands, CommandExecutionError, ExecutableCommand};
 
 pub struct Handler {}
 
 impl Handler {
-    pub fn handle_input(&self, input: ParsedInput) -> Result<i32, CommandExecutionError> {
-        let command_name = input.command;
-        let args = input.args.to_vec();
-        let command = Command::new(command_name, args);
+    pub fn handle_input(&self) -> Result<i32, CommandExecutionError> {
+        let command = Commands::new();
         if let Ok(()) = command.execute() {
-            return Ok(1);
+            return Ok(0);
         }
         return Err(CommandExecutionError {})
     }

@@ -4,31 +4,40 @@ mod error;
 
 use std::io::Result;
 
-pub use init::InitCommand;
+use cat_file::{cat_file, CatFileArgs};
+use clap::{Parser, Subcommand};
 pub use error::CommandExecutionError;
-pub use cat_file::CatFileCommand;
+use init::{init, InitFileArgs};
 
 pub trait ExecutableCommand {
     fn execute(&self) -> Result<()>;
 }
 
-pub enum Command {
-    Init(InitCommand),
-    CatFile(CatFileCommand)
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    cmd: Commands,
 }
 
-impl Command {
-    pub fn new(command_name: &String, args: Vec<String>) -> Self {
-        match command_name.as_str() {
-            "init" => Command::Init(InitCommand::new(args.to_vec())),
-            "cat-file" => Command::CatFile(CatFileCommand::new(args.to_vec())),
-            _ => Command::Init(InitCommand::new(args.to_vec())),
-        }
+#[derive(Subcommand)]
+pub enum Commands {
+    Init(InitFileArgs),
+    CatFile(CatFileArgs),
+}
+
+impl Commands {
+    pub fn new() -> Self {
+        let args = Cli::parse();
+        args.cmd
     }
 }
 
-impl ExecutableCommand for Command {
-    fn execute(self: &Self) -> Result<()> {
-        self.execute()
+impl ExecutableCommand for Commands {
+    fn execute(&self) -> Result<()> {
+        match self {
+            Commands::Init(args) => init(args),
+            Commands::CatFile(args) => cat_file(args),
+        }
     }
 }
