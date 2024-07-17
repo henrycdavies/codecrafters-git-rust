@@ -1,4 +1,4 @@
-use std::{fs, io::{Bytes, Read, Result}};
+use std::{fs, io::{Read, Result}};
 
 use clap::Args;
 use flate2::bufread::ZlibDecoder;
@@ -9,20 +9,22 @@ pub struct CatFileArgs {
     path: String
 }
 
-pub fn decompress_blob_to_string(buf: &[u8]) -> String {
-    let mut d = ZlibDecoder::new(buf);
-    let mut out_vec = Vec::new();
-    d.read_to_end(&mut out_vec).unwrap();
-    String::from_utf8_lossy(&out_vec).into_owned()
+pub fn read_blob_to_bytes(blob_path: String) -> Result<Vec<u8>> {
+    fs::read(blob_path).and_then(|buf| {
+        let mut d = ZlibDecoder::new(&buf[..]);
+        let mut bytes = Vec::new();
+        d.read_to_end(&mut bytes).unwrap();
+        Ok(bytes)
+    })
 }
 
 pub fn cat_file(args: &CatFileArgs) -> Result<()> {
     let objects_dir = "./.git/objects";
     let (blob_dir, blob_file) = args.path.split_at(2);
     let blob_path = format!("{}/{}/{}", objects_dir, blob_dir, blob_file);
-    fs::read(blob_path).and_then(|buf| {
-        let out = decompress_blob_to_string(buf.as_slice());
-        println!("{}", out);
-        Ok(())
-    })
-}
+    if let Ok(blob_bytes) = read_blob_to_bytes(blob_path) {
+        println!("{}", String::from_utf8_lossy(&blob_bytes));
+        return Ok(());
+    };
+    Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Blob not found"))
+} 
